@@ -5,24 +5,29 @@ package com.tj.exercise.springframework.test.bean;
  * @Date: 2022/3/11 11:30
  */
 public class UserService {
-    public UserService(String name) {
-        this.name = name;
+
+    private String uId;
+
+    private UserDao userDao;
+
+    public String getuId() {
+        return uId;
     }
 
-    public UserService() {
+    public void setuId(String uId) {
+        this.uId = uId;
     }
 
-    private String name;
+    public UserDao getUserDao() {
+        return userDao;
+    }
 
-    @Override
-    public String toString() {
-        final StringBuilder stringBuilder = new StringBuilder("");
-        stringBuilder.append(name);
-        return stringBuilder.toString();
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public void queryUserInfo(){
-        System.out.println("查询用户信息:" + name);
+        System.out.println("查询用户信息:" + userDao.queryUserName(uId));
 
     }
 }

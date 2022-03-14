@@ -1,8 +1,13 @@
 package com.tj.exercise.springframework.beans.factory.support;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.tj.exercise.springframework.beans.BeansException;
+import com.tj.exercise.springframework.beans.PropertyValue;
+import com.tj.exercise.springframework.beans.PropertyValues;
 import com.tj.exercise.springframework.beans.factory.config.BeanDefinition;
+import com.tj.exercise.springframework.beans.factory.config.BeanReference;
 import jdk.internal.org.objectweb.asm.tree.TryCatchBlockNode;
+import jdk.nashorn.internal.runtime.ECMAException;
 
 import java.lang.reflect.Constructor;
 
@@ -27,6 +32,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
         try {
             bean = createBeanInstance(beanDefinition,beanName,args);
+            applyPropertyValues(beanName,bean,beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
@@ -34,6 +40,25 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         addSingleton(beanName,bean);
         return bean;
 
+    }
+
+    protected void applyPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition) {
+        try{
+            PropertyValues propertyValues = beanDefinition.getPropertyValues();
+            for(PropertyValue propertyValue : propertyValues.getProvertyValues()){
+
+                String name = propertyValue.getName();
+                Object value = propertyValue.getValue();
+
+                if(value instanceof BeanReference){
+                    BeanReference beanReference = (BeanReference) value;
+                    value = getBean(beanReference.getBeanName());
+                }
+                BeanUtil.setFieldValue(bean,name,value);
+            }
+        } catch (Exception e){
+            throw  new BeansException("Error setting property values: " + beanName);
+        }
     }
 
     protected Object createBeanInstance(BeanDefinition beanDefinition, String beanName, Object[] args){
