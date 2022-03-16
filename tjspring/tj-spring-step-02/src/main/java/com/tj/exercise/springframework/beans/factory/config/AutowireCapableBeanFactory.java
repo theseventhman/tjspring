@@ -7,4 +7,7 @@ import com.tj.exercise.springframework.beans.factory.BeanFactory;
  * @Date: 2022/3/15 21:49
  */
 public interface AutowireCapableBeanFactory extends BeanFactory {
+    Object applyBeanPostProcessorsAfterInitialization(Object existBean, String beanName);
+
+    Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName);
 }
