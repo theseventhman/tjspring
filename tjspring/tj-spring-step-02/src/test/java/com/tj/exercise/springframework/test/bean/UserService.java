@@ -1,10 +1,13 @@
 package com.tj.exercise.springframework.test.bean;
 
+import com.tj.exercise.springframework.beans.factory.DisposableBean;
+import com.tj.exercise.springframework.beans.factory.InitializingBean;
+
 /**
  * @Author: tj
  * @Date: 2022/3/11 11:30
  */
-public class UserService {
+public class UserService implements InitializingBean, DisposableBean {
 
     private String uId;
 
@@ -48,5 +51,15 @@ public class UserService {
 
     public String queryUserInfo(){
         return userDao.queryUserName(uId) +","+company +","+location;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("执行: UserService.destroy");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("执行: UserService.afterPropertiesSet");
     }
 }
