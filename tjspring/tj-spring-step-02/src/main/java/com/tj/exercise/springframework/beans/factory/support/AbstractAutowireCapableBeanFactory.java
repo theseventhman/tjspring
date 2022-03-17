@@ -7,8 +7,7 @@ import com.sun.media.jfxmedia.events.NewFrameEvent;
 import com.tj.exercise.springframework.beans.BeansException;
 import com.tj.exercise.springframework.beans.PropertyValue;
 import com.tj.exercise.springframework.beans.PropertyValues;
-import com.tj.exercise.springframework.beans.factory.DisposableBean;
-import com.tj.exercise.springframework.beans.factory.InitializingBean;
+import com.tj.exercise.springframework.beans.factory.*;
 import com.tj.exercise.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import com.tj.exercise.springframework.beans.factory.config.BeanDefinition;
 import com.tj.exercise.springframework.beans.factory.config.BeanPostProcessor;
@@ -16,6 +15,7 @@ import com.tj.exercise.springframework.beans.factory.config.BeanReference;
 import jdk.internal.org.objectweb.asm.tree.TryCatchBlockNode;
 import jdk.nashorn.internal.runtime.ECMAException;
 
+import java.awt.image.BandCombineOp;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -95,6 +95,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
     private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
+
+        if(bean instanceof Aware){
+            if(bean instanceof BeanFactoryAware){
+                ((BeanFactoryAware)bean).setBeanFactory(this);
+            }
+            if(bean instanceof BeanClassLoaderAware){
+                ((BeanClassLoaderAware)bean).setBeanClassLoader(getBeanClassLoader());
+            }
+            if(bean instanceof BeanNameAware){
+                ((BeanNameAware)bean).setBeanName(beanName);
+            }
+        }
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean,beanName);
 
         try {
@@ -106,6 +118,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean,beanName);
         return wrappedBean;
     }
+
+
 
     @Override
     public  Object applyBeanPostProcessorsAfterInitialization(Object existBean, String beanName) {
