@@ -1,14 +1,22 @@
 package com.tj.exercise.springframework.context.support;
 
 import cn.hutool.core.bean.BeanException;
+import com.sun.media.jfxmedia.events.NewFrameEvent;
 import com.tj.exercise.springframework.beans.BeansException;
 import com.tj.exercise.springframework.beans.factory.ConfigurableListableBeanFactory;
 import com.tj.exercise.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import com.tj.exercise.springframework.beans.factory.config.BeanPostProcessor;
 import com.tj.exercise.springframework.beans.factory.config.ConfigurableBeanFactory;
+import com.tj.exercise.springframework.context.ApplicationEvent;
+import com.tj.exercise.springframework.context.ApplicationListener;
 import com.tj.exercise.springframework.context.ConfigurableApplicationContext;
+import com.tj.exercise.springframework.context.event.ApplicationEventMulticaster;
+import com.tj.exercise.springframework.context.event.ContextClosedEvent;
+import com.tj.exercise.springframework.context.event.ContextRefreshedEvent;
+import com.tj.exercise.springframework.context.event.SimpleApplicationEventMulticaster;
 import com.tj.exercise.springframework.core.io.DefaultResourceLoader;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -16,6 +24,15 @@ import java.util.Map;
  * @Date: 2022/3/16 9:21
  */
 public abstract class AbstractApplicationContext extends DefaultResourceLoader implements ConfigurableApplicationContext {
+
+    public static final String APPLICATION_EVENT_MULTICASTER_BEAN_NAME  = "applicationEventMulticaster";
+
+    private ApplicationEventMulticaster applicationEventMulticaster;
+
+    @Override
+    public void publishEvent(ApplicationEvent event) {
+        applicationEventMulticaster.multicastEvent(event);
+    }
 
     @Override
     public void refresh() throws BeanException {
@@ -29,11 +46,41 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
         registerBeanPostProcessors(beanFactory);
 
+        initApplicationEventMulticaster();
+
+        registerListeners();
+
         // 提前实例化单例Bean对象
         beanFactory.preInstantiateSingletons();
+
+        finishRefresh();
     }
 
+    /**
+     * 发布容器刷新完成事件
+     */
+    private void finishRefresh() {
+        publishEvent(new ContextRefreshedEvent(this));
+    }
 
+    /**
+     * 注册事件监听器
+     */
+    private void registerListeners() {
+        Collection<ApplicationListener> applicationListeners = getBeansOfType(ApplicationListener.class).values();
+        for(ApplicationListener listener : applicationListeners){
+            applicationEventMulticaster.addApplicationListener(listener);
+        }
+    }
+
+    /**
+     * 初始化事件发布者
+     */
+    private void initApplicationEventMulticaster() {
+        ConfigurableBeanFactory beanFactory = getBeanFactory();
+        applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+        beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME,applicationEventMulticaster);
+    }
 
 
     /**
@@ -100,6 +147,9 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
 
     @Override
     public void close() {
-      getBeanFactory().destroySingletons();
+
+       publishEvent(new ContextClosedEvent(this));
+
+        getBeanFactory().destroySingletons();
     }
 }
