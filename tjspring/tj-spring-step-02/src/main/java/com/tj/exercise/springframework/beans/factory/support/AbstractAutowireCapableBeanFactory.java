@@ -8,10 +8,7 @@ import com.tj.exercise.springframework.beans.BeansException;
 import com.tj.exercise.springframework.beans.PropertyValue;
 import com.tj.exercise.springframework.beans.PropertyValues;
 import com.tj.exercise.springframework.beans.factory.*;
-import com.tj.exercise.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import com.tj.exercise.springframework.beans.factory.config.BeanDefinition;
-import com.tj.exercise.springframework.beans.factory.config.BeanPostProcessor;
-import com.tj.exercise.springframework.beans.factory.config.BeanReference;
+import com.tj.exercise.springframework.beans.factory.config.*;
 import jdk.internal.org.objectweb.asm.tree.TryCatchBlockNode;
 import jdk.nashorn.internal.runtime.ECMAException;
 
@@ -41,20 +38,40 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
        Object bean = null;
 
         try {
+            //判断是否返回代理 Bean对象
+            bean = resolveBeforeInstantiation(beanName, beanDefinition);
+            if(null != bean){
+                return  bean;
+            }
+            //实例化Bean
             bean = createBeanInstance(beanDefinition,beanName,args);
+            //给Bean填充属性
             applyPropertyValues(beanName,bean,beanDefinition);
+            //执行Bean的初始化方法和BeanPostProcessor的前置和后缀处理方法
             bean = initializeBean(beanName,bean,beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Instantiation of bean failed",e);
         }
 
+        //注册实现了 DisposableBean 接口的Bean对象
         registerDisposableBeanIfNecessary(beanName, bean, beanDefinition);
 
+        // 判断 SCOPE_SINGLETON 、SCOPE_PROTOTYPE
         if(beanDefinition.isSingleton()) {
-            addSingleton(beanName, bean);
+            registerSingleton(beanName, bean);
         }
         return bean;
 
+    }
+
+
+
+    protected Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorsBeforeInitialization(beanDefinition.getBeanClass(),beanName);
+        if(null != bean){
+            bean = applyBeanPostProcessorsAfterInitialization(bean,beanName);
+        }
+        return bean;
     }
 
     protected void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {
@@ -136,6 +153,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
        return result;
     }
 
+    @Override
+    public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) throws BeansException {
+        Object result = existingBean;
+        for (BeanPostProcessor processor : getBeanPostProcessors()) {
+            Object current = processor.postProcessBeforeInitialization(result, beanName);
+            if (null == current) return result;
+            result = current;
+        }
+        return result;
+    }
+
     private void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws  Exception {
        if(bean instanceof InitializingBean){
            ((InitializingBean) bean).afterPropertiesSet();
@@ -152,15 +180,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
     }
 
-    @Override
-    public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
-        Object result = existingBean;
-        for(BeanPostProcessor processor : getBeanPostProcessors()){
-            Object current = processor.postProcessBeforeInitialization(result,beanName);
-            if(null == current) return result;
-            result = current;
+
+    protected Object applyBeanPostProcessorsBeforeInitialization(Class<?> beanClass, String beanName) {
+
+        for(BeanPostProcessor beanPostProcessor : getBeanPostProcessors()){
+           if(beanPostProcessor instanceof InstantiationAwareBeanPostProcessor){
+               Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass,beanName);
+               if(null != result) return  result;
+           }
         }
-        return result;
+        return null;
     }
 
 
