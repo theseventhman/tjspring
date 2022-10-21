@@ -1,6 +1,7 @@
 package com.tj.exercise.springframework.beans.factory.config;
 
 import com.tj.exercise.springframework.beans.BeansException;
+import com.tj.exercise.springframework.beans.PropertyValues;
 
 /**
  * @Author: tj
@@ -20,4 +21,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @throws BeansException
      */
     Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException;
-}
+
+    PropertyValues postProcessorPropertyValues(PropertyValues pvs, Object bean, String beanName);
+
+    }
