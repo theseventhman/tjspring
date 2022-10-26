@@ -17,7 +17,7 @@ import java.util.Random;
 @Component("userService")
 public class UserService implements IUserService {
 
-    @Value("{token}")
+    @Value("${token}")
     private String token;
 
     @Autowired
