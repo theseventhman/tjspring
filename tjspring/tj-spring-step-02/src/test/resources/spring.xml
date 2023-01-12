@@ -6,10 +6,21 @@
           http://www.springframework.org/schema/beans/spring-beans.xsd
    http://www.springframework.org/schema/context">
 
-    <bean class="com.tj.exercise.springframework.beans.factory.PropertyPlaceholderConfigurer">
-        <property name="location" value="classpath:token.properties"/>
+    <bean class="com.tj.exercise.springframework.test.bean.UserService">
+        <property name="token" value="RejDlI78hu223Opo983Ds"/>
     </bean>
 
-    <context:component-scan base-package="com.tj.exercise.springframework.test.bean"/>
+    <bean class="com.tj.exercise.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+
+    <bean id="beforeAdvice" class="com.tj.exercise.springframework.test.bean.UserServiceBeforeAdvice"/>
+
+    <bean id="methodInterceptor" class="com.tj.exercise.springframework.aop.framework.adapter.MethodBeforeAdviceInterceptor">
+        <property name="advice" ref="beforeAdvice"/>
+    </bean>
+
+    <bean id="pointcutAdvisor" class="com.tj.exercise.springframework.aop.aspectj.AspectJExpressionPointcutAdvisor">
+        <property name="expression" value="execution(* com.tj.exercise.springframework.test.bean.IUserService.*(..))"/>
+        <property name="advice" ref="methodInterceptor"/>
+    </bean>
 
 </beans>

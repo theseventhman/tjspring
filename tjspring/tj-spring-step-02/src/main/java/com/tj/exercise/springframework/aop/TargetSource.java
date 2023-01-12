@@ -1,5 +1,7 @@
 package com.tj.exercise.springframework.aop;
 
+import com.tj.exercise.springframework.core.util.ClassUtils;
+
 /**
  * @Author: tj
  * @Date: 2022/3/22 22:00
@@ -20,7 +22,9 @@ public class TargetSource {
      * @return the type of targets returned by this {@link TargetSource}
      */
     public Class<?> [] getTargetClass() {
-        return this.target.getClass().getInterfaces();
+        Class<?> clazz = this.target.getClass();
+        clazz = ClassUtils.isCglibProxyClass(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz.getInterfaces();
     }
 
     /**
