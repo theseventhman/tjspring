@@ -23,7 +23,6 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      */
     Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException;
 
-    PropertyValues postProcessorPropertyValues(PropertyValues pvs, Object bean, String beanName);
 
     /**
      * Perform operations after the bean has been instantiated, via a constructor or factory method,
@@ -40,4 +39,22 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @throws BeansException
      */
     boolean postProcessAfterInstantiation(Object bean, String beanName);
+
+    /**
+     * Post-process the given property values before the factory applies them
+     * to the given bean. Allows for checking whether all dependencies have been
+     * satisfied, for example based on a "Required" annotation on bean property setters.
+     * <p>
+     *  在 Bean 对象实例化完成后,设置属性操作之前执行此方法
+     * @param pvs
+     * @param bean
+     * @param beanName
+     * @return
+     * @throws BeansException
+     */
+    PropertyValues postProcessorPropertyValues(PropertyValues pvs, Object bean, String beanName) throws BeansException;
+
+    default  Object getEarlyBeanReference(Object bean, String beanName){
+        return bean;
+    }
 }

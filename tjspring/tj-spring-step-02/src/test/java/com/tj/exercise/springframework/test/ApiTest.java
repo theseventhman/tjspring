@@ -14,10 +14,7 @@ import com.tj.exercise.springframework.aop.framework.adapter.MethodBeforeAdviceI
 import com.tj.exercise.springframework.beans.factory.config.BeanPostProcessor;
 import com.tj.exercise.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import com.tj.exercise.springframework.context.support.ClassPathXmlApplicationContext;
-import com.tj.exercise.springframework.test.bean.IUserService;
-import com.tj.exercise.springframework.test.bean.UserService;
-import com.tj.exercise.springframework.test.bean.UserServiceBeforeAdvice;
-import com.tj.exercise.springframework.test.bean.UserServiceInterceptor;
+import com.tj.exercise.springframework.test.bean.*;
 import org.aopalliance.intercept.Invocation;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.junit.Before;
@@ -37,10 +34,12 @@ import java.util.List;
 public class ApiTest {
 
     @Test
-    public void test_autoProxy(){
+    public void test_circular(){
        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
-       IUserService userService = applicationContext.getBean("userService",IUserService.class);
-        System.out.println("测试结果: " + userService.queryUserInfo());
+       Husband husband = applicationContext.getBean("husband", Husband.class);
+       Wife wife = applicationContext.getBean("wife",Wife.class);
+        System.out.println("老公的媳妇: " + husband.queryWife());
+        System.out.println("媳妇的老公: " + wife.queryHusband());
     }
 
 
